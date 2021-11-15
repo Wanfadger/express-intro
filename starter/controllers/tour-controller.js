@@ -1,8 +1,13 @@
 const fs = require('fs');
 
-exports.tours = JSON.parse(
+tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours.json`, 'utf-8')
 );
+
+exports.CHECKID = (req, res, next, val) => {
+    console.log("Param Middleware")
+    next()
+}
 
 exports.getAllTours = (req, res) => {
   console.log(req.company);
