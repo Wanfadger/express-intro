@@ -9,6 +9,18 @@ exports.CHECKID = (req, res, next, val) => {
     next()
 }
 
+//check body middleware
+exports.CHECK_BODY = (req, res, next) => {
+    let body = req.body;
+    if(!body.name || !body.price){
+       return res.status("400").json({
+           "message": "BadRequest missing name and price",
+           status:false
+        })
+    }
+    next()
+}
+
 exports.getAllTours = (req, res) => {
   console.log(req.company);
   res.status(200).json({
