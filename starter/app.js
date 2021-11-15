@@ -1,19 +1,34 @@
 const fs = require('fs');
 const express = require('express');
+const morgan = require("morgan")
 const { json } = require('express');
 
 const app = express();
 
-//middlewares
+//////////////////MIDDLE WARES
 app.use(express.json());
+app.use(morgan("dev"))
+
+app.use((req, res, next) => {
+    console.log("Hello From The middleware")
+    next()
+})
+
+app.use((req, res, next) => {
+   req.company = "Planet Systems Limited"
+  next();
+});
+
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours.json`, 'utf-8')
 );
 
 
+/////////////ROUTE HANDLERS
 
-const getAllTours = (req , res) => {
+const getAllTours = (req, res) => {
+    console.log(req.company);
    res.status(200).json({
      message: 'success',
      count: tours.length,
@@ -82,6 +97,8 @@ const deleteTour = (req, res) => {
 // ///////////delete
 // app.delete('/api/v1/tours/:id', deleteTour);
 
+
+/////////////////ROUTES
 app.route('/api/v1/tours')
     .get(getAllTours)
     .post(createTour);
