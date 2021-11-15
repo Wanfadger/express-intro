@@ -11,38 +11,18 @@ const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours.json`, 'utf-8')
 );
 
-//get
-app.get('/api/v1/tours', (req, res) => {
-  res.status(200).json({
-    message: 'success',
-    count: tours.length,
-    data: { tours },
-    status: true,
-  });
-  //.send("Hello World from server side")
-});
 
-app.get('/api/v1/tours/:id', (req, res) => {
-  console.log(req.params);
-  // console.log(req.query)
-    const tour = tours.find((t) => t._id === req.params.id);
-    if (!tour) {
-      return res.status(404).json({
-         message: 'Tour not found',
-         data: { tour },
-         status: false,
-       });   
-    }
-  res.status(200).json({
-    message: 'success',
-    data: { tour },
-    status: true,
-  });
-  //.send("Hello World from server side")
-});
 
-/////////////////////////[post]
-app.post('/api/v1/tours', (req, res) => {
+const getAllTours = (req , res) => {
+   res.status(200).json({
+     message: 'success',
+     count: tours.length,
+     data: { tours },
+     status: true,
+   });
+}
+
+const createTour = (req, res) => {
   console.log(req.body);
   const newId = tours[tours.length - 1]._id + '1';
   const newTour = Object.assign({ _id: newId }, req.body);
@@ -61,33 +41,46 @@ app.post('/api/v1/tours', (req, res) => {
       });
     }
   );
-});
+};
 
+const getTour = (req, res) => {
+      console.log(req.params);
+      // console.log(req.query)
+      const tour = tours.find((t) => t._id === req.params.id);
+      if (!tour) {
+        return res.status(404).json({
+          message: 'Tour not found',
+          data: { tour },
+          status: false,
+        });
+      }
+      res.status(200).json({
+        message: 'success',
+        data: { tour },
+        status: true,
+      });
+};
+
+const pathTour = (req, res) => {
+      console.log(req.params);
+
+      res.status(200).end(`Patching ${req.params.id}`);
+};
+
+const deleteTour = (req, res) => {
+      console.log(req.params);
+      res.status(200).end(`Deleting ${req.params.id}`);
+};
+
+//get
+app.get('/api/v1/tours', getAllTours);
+app.get('/api/v1/tours/:id', getTour);
+/////////////////////////[post]
+app.post('/api/v1/tours', createTour);
 ///////////patch
-
-app.patch('/api/v1/tours/:id', (req, res) => {
-  console.log(req.params);
-
-    res.status(200).end(`Patching ${req.params.id}`)
-});
-
-
-//put
-
-app.put('/api/v1/tours/:id', (req, res) => {
-  console.log(req.params);
-
-    res.status(200).end(`Putting ${req.params.id}`)
-});
-
-
+app.patch('/api/v1/tours/:id', pathTour);
 ///////////delete
-
-app.delete('/api/v1/tours/:id', (req, res) => {
-  console.log(req.params);
-
-    res.status(200).end(`Deleting ${req.params.id}`)
-});
+app.delete('/api/v1/tours/:id', deleteTour);
 
 
 
