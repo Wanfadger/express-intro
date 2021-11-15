@@ -63,7 +63,38 @@ app.post('/api/v1/tours', (req, res) => {
   );
 });
 
+///////////patch
+
+app.patch('/api/v1/tours/:id', (req, res) => {
+  console.log(req.params);
+
+    res.status(200).end(`Patching ${req.params.id}`)
+});
+
+
+//put
+
+app.put('/api/v1/tours/:id', (req, res) => {
+  console.log(req.params);
+
+    res.status(200).end(`Putting ${req.params.id}`)
+});
+
+
+///////////delete
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+  console.log(req.params);
+
+    res.status(200).end(`Deleting ${req.params.id}`)
+});
+
+
+
 let port = 3000;
 app.listen(port, () => {
   console.log(`app running on port ${port}`);
 });
+
+
+
