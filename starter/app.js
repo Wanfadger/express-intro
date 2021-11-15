@@ -10,6 +10,8 @@ app.use(express.json());
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours.json`, 'utf-8')
 );
+
+//get
 app.get('/api/v1/tours', (req, res) => {
   res.status(200).json({
     message: 'success',
@@ -20,11 +22,30 @@ app.get('/api/v1/tours', (req, res) => {
   //.send("Hello World from server side")
 });
 
+app.get('/api/v1/tours/:id', (req, res) => {
+  console.log(req.params);
+  // console.log(req.query)
+    const tour = tours.find((t) => t._id === req.params.id);
+    if (!tour) {
+      return res.status(404).json({
+         message: 'Tour not found',
+         data: { tour },
+         status: false,
+       });   
+    }
+  res.status(200).json({
+    message: 'success',
+    data: { tour },
+    status: true,
+  });
+  //.send("Hello World from server side")
+});
+
 /////////////////////////[post]
 app.post('/api/v1/tours', (req, res) => {
   console.log(req.body);
-  const newId = tours[tours.length - 1] + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
+  const newId = tours[tours.length - 1]._id + '1';
+  const newTour = Object.assign({ _id: newId }, req.body);
 
   tours.push(newTour);
 
