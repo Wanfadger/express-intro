@@ -72,16 +72,22 @@ const deleteTour = (req, res) => {
       res.status(200).end(`Deleting ${req.params.id}`);
 };
 
-//get
-app.get('/api/v1/tours', getAllTours);
-app.get('/api/v1/tours/:id', getTour);
-/////////////////////////[post]
-app.post('/api/v1/tours', createTour);
-///////////patch
-app.patch('/api/v1/tours/:id', pathTour);
-///////////delete
-app.delete('/api/v1/tours/:id', deleteTour);
+// //get
+// app.get('/api/v1/tours', getAllTours);
+// app.get('/api/v1/tours/:id', getTour);
+// /////////////////////////[post]
+// app.post('/api/v1/tours', createTour);
+// ///////////patch
+// app.patch('/api/v1/tours/:id', pathTour);
+// ///////////delete
+// app.delete('/api/v1/tours/:id', deleteTour);
 
+app.route('/api/v1/tours')
+    .get(getAllTours)
+    .post(createTour);
+app.route('/api/v1/tours/:id')
+    .get(getTour)
+    .delete(deleteTour).patch(pathTour);
 
 
 let port = 3000;
