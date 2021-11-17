@@ -7,7 +7,11 @@ const tourController = require(`${__dirname}/../controllers/tour-controller`)
 
 
 router.route('/').get(tourController.getAllTours)
-    .post(tourController.createTour);
+  .post(tourController.createTour);
+  
+router.get('/stats', tourController.getTourStatistics);
+router.get('/monthly-plan/:year', tourController.getMonthlyPlan);
+
 router
   .route('/:id')
   .get(tourController.getTour)
