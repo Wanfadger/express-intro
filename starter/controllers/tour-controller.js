@@ -1,82 +1,100 @@
-const fs = require('fs');
+const Tour = require('./../models/tourModel');
+const ApiFeature  = require('./../utils/apiFeature')
 
-tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours.json`, 'utf-8')
-);
+exports.getAllTours = async (req, res) => {
+  try {
+    //EXCUTE QUERY
+    const apiFeature = new ApiFeature(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .fieldLimiting()
+      .paginate();
+    const tours = await apiFeature.query;
 
-exports.CHECKID = (req, res, next, val) => {
-    console.log("Param Middleware")
-    next()
-}
-
-//check body middleware
-exports.CHECK_BODY = (req, res, next) => {
-    let body = req.body;
-    if(!body.name || !body.price){
-       return res.status("400").json({
-           "message": "BadRequest missing name and price",
-           status:false
-        })
-    }
-    next()
-}
-
-exports.getAllTours = (req, res) => {
-  console.log(req.company);
-  res.status(200).json({
-    message: 'success',
-    count: tours.length,
-    data: { tours },
-    status: true,
-  });
-};
-
-exports.createTour = (req, res) => {
-  console.log(req.body);
-  const newId = tours[tours.length - 1]._id + '1';
-  const newTour = Object.assign({ _id: newId }, req.body);
-
-  tours.push(newTour);
-
-  fs.writeFile(
-    `${__dirname}/../dev-data/data/tours.json`,
-    JSON.stringify(tours),
-    (error, data) => {
-      if (error) console.log('Error ' + error.message);
-      res.status(201).json({
-        message: 'success',
-        data: { trour: newTour },
-        status: true,
-      });
-    }
-  );
-};
-
-exports.getTour = (req, res) => {
-  console.log(req.params);
-  // console.log(req.query)
-  const tour = tours.find((t) => t._id === req.params.id);
-  if (!tour) {
-    return res.status(404).json({
-      message: 'Tour not found',
-      data: { tour },
+    res.status(200).json({
+      status: true,
+      message: 'success',
+      count: tours.length,
+      data: { tours },
+    });
+  } catch (error) {
+    console.log('ERROR ' + error.message);
+    return res.status('404').json({
+      message: error.message,
       status: false,
     });
   }
-  res.status(200).json({
-    message: 'success',
-    data: { tour },
-    status: true,
-  });
 };
 
-exports.pathTour = (req, res) => {
-  console.log(req.params);
-
-  res.status(200).end(`Patching ${req.params.id}`);
+exports.createTour = async (req, res) => {
+  try {
+    const tour = await Tour.create(req.body);
+    return res.status(201).json({
+      message: 'success',
+      data: { tour: tour },
+      status: true,
+    });
+  } catch (error) {
+    console.error(`ERROR ${error.message}`);
+    return res.status('400').json({
+      message: error.message,
+      status: false,
+    });
+  }
 };
 
-exports.deleteTour = (req, res) => {
-  console.log(req.params);
-  res.status(200).end(`Deleting ${req.params.id}`);
+exports.getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.status(200).json({
+      status: true,
+      message: 'success',
+      data: { tour },
+    });
+  } catch (error) {
+    console.log('ERROR ' + error.message);
+    return res.status('404').json({
+      message: error.message,
+      status: false,
+    });
+  }
+};
+
+exports.updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }); //returns new updated tour
+
+    res.status(200).json({
+      status: true,
+      message: 'success',
+      data: { tour },
+    });
+  } catch (error) {
+    console.log('ERROR ' + error.message);
+    return res.status('404').json({
+      message: error.message,
+      status: false,
+    });
+  }
+};
+
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id); //returns new updated tour
+
+    res.status(204).json({
+      status: true,
+      message: 'success',
+      data: null,
+    });
+  } catch (error) {
+    console.log('ERROR ' + error.message);
+    return res.status('404').json({
+      message: error.message,
+      status: false,
+    });
+  }
 };
