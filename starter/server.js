@@ -26,12 +26,23 @@ const tourSchema = new mongoose.Schema({
     type: Number,
     required: ['true', 'A tour must have price'],
   },
-  raring: {
+  rating: {
     type: Number,
     default:4.5
   },
 });
 
+
+const Tour = mongoose.model("Tour", tourSchema)
+const testTour = new Tour({
+  name: 'The Parker Camper',
+  price: 490,
+});
+
+testTour
+  .save()
+  .then((data) => console.log(data))
+  .catch((error) => console.log('EROR ' + error.message));
 
 
 
