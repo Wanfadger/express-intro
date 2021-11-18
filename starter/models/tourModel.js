@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const slugify = require('slugify')
+const slugify = require('slugify');
 
 //Define a schema
 var Schema = mongoose.Schema;
@@ -38,6 +38,20 @@ const tourSchema = new Schema(
     difficulty: {
       type: String,
       required: ['true', 'A tour should have difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficulty'],
+        message: 'difficulty is either: easy , medium or difficulty',
+      },
+    },
+    priceDiscount: {
+      type: String,
+      validate: {
+        validator: function (val) {
+          //This only poinst to current document on new document creation
+          return val < this.price;
+        },
+        message: `Discount ({VALUE}) should be lower than regular value)`,
+      },
     },
     summary: {
       type: String,
@@ -59,6 +73,10 @@ const tourSchema = new Schema(
       default: Date.now(),
       select: false,
     },
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
     startDates: [Date], //starts different dates
   },
   {
@@ -72,10 +90,11 @@ tourSchema.virtual('durationWeeks').get(function () {
 });
 
 //DOCUMENT MIDDLEWARE : runs when on save and create and not on Many()
+//this points to current document
 tourSchema.pre('save', function (next) {
-  this.slug = slugify(this.name , {lower:true})
-  console.log(this)
-  next()
+  this.slug = slugify(this.name, { lower: true });
+  console.log(this);
+  next();
 });
 
 // tourSchema.pre('save', function (next) {
@@ -85,6 +104,33 @@ tourSchema.pre('save', function (next) {
 
 // tourSchema.post('save', function (doc , next) {
 //   console.log(doc);
+//   next();
+// });
+
+///////////////////// QUERY MIDDLEWARE
+//this points to current query
+//tourSchema.pre('find', function (next) {
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
+
+tourSchema.post(/^find/, function (docs, next) {
+  console.log(docs);
+  next();
+});
+
+///////////////////// AGGREGATION MIDDLEWARE
+//this points to current aggregation object
+//tourSchema.pre('find', function (next) {
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  console.log(this.pipeline());
+  next();
+});
+
+// tourSchema.pre('findOne', function (next) {
+//   this.find({ secretTour: { $ne: true } });
 //   next();
 // });
 
