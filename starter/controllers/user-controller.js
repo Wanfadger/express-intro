@@ -1,4 +1,6 @@
 
+
+
 exports.getAllUsers = (req, res) => {
   res.status(500).json({
     message: 'Not yet defined',
@@ -7,6 +9,7 @@ exports.getAllUsers = (req, res) => {
 };
 
 exports.createUser = (req, res) => {
+
   res.status(500).json({
     message: 'Not yet defined',
     status: false,

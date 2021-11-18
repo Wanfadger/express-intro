@@ -33,16 +33,6 @@ app.use('/api/v1/users', userRouter);
 
 //unmatched routes middleware
 app.all('*', (req, res, next) => {
-  // res
-  //   .status(404)
-  //   .json({
-  //     message: `Can't find ${req.originalUrl} on the server`,
-  //     status: false,
-  //   });
-  // const err = new Error();
-  // err.status = false
-  // err.statusCode = 404
-  
   next(new AppError(`Can't find ${req.originalUrl} on the servert`, 404));
 });
 
