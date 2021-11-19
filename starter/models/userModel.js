@@ -44,6 +44,11 @@ const userSchema = new Schema({
   photo: {
     type: String,
   },
+  role: {
+    type: String,
+    enum: ["admin", "guide", "lead-guide", "user"],
+    default:"user"
+  }
 });
 
 userSchema.pre('save', async function (next) {

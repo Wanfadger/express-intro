@@ -1,26 +1,39 @@
 const jwt = require('jsonwebtoken');
-const {promisify} = require("util")
+const { promisify } = require('util');
 const User = require(`${__dirname}/../models/userModel`);
 const AppError = require(`${__dirname}/../utils/globalError`);
-
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
-}
+};
 
-exports.signup = async (req, res , next) => {
+//wrapped a callback into a closure , therefore has access to roles
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.currentUser.role)) {
+      console.log(roles);
+      //forbidden
+      return next(
+        new AppError(`You Dont have permission to perform this action`, 403)
+      );
+    }
+    next()
+  };
+};
+
+exports.signup = async (req, res, next) => {
   try {
     const newUser = await User.create({
       name: req.body.name,
       email: req.body.email,
       password: req.body.password,
       passwordConfirm: req.body.passwordConfirm,
+      role:req.body.role
     });
 
-
-    const token = signToken(newUser._id)
+    const token = signToken(newUser._id);
 
     return res.status(201).json({
       message: 'success',
@@ -35,18 +48,18 @@ exports.signup = async (req, res , next) => {
   }
 };
 
-exports.login = async (req, res , next) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    console.log(password)
+    console.log(password);
 
     //check if emaill and password exists
     if (!email || !password) {
-     return next(new AppError("'Please provide email and password'" , 400));
+      return next(new AppError("'Please provide email and password'", 400));
     }
 
     //check if password is correct
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user || !(await user.validatePassword(password, user.password))) {
       return next(new AppError('Ivalid Email or Password', 401));
@@ -56,7 +69,7 @@ exports.login = async (req, res , next) => {
     const token = signToken(user._id);
 
     return res.status(200).json({
-      status: "success",
+      status: 'success',
       token,
     });
   } catch (error) {
@@ -64,7 +77,6 @@ exports.login = async (req, res , next) => {
     return next(new AppError('Unknown Error', 500));
   }
 };
-
 
 exports.protect = async (req, res, next) => {
   try {
@@ -100,15 +112,17 @@ exports.protect = async (req, res, next) => {
     }
 
     //check if user changed password after jwt was changed
-    //add passchange property 
+    //add passchange property
 
     ///GRANT ACCRSS TO CURRENT USER
 
-    req.currentUser = currentUser
+    req.currentUser = currentUser;
 
     next();
   } catch (error) {
-        console.error(`ERROR ${error.message}`);
-        return next(new AppError(`ERROR: ${error.message}! , please login again`, 401));
+    console.error(`ERROR ${error.message}`);
+    return next(
+      new AppError(`ERROR: ${error.message}! , please login again`, 401)
+    );
   }
 };
