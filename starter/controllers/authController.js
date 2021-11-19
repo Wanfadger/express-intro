@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const User = require(`${__dirname}/../models/userModel`);
 const AppError = require(`${__dirname}/../utils/globalError`);
+const sendEmail = require(`${__dirname}/../utils/email`);
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -132,42 +133,69 @@ exports.forgotPassword = async (req, res, next) => {
     // Get User based on posted email
     const user = await User.findOne({ email: req.body.email });
 
-      if (!user) {
-        return next(
-          new AppError(
-            `Theres no User with tha email ${req.params.email} Address `,
-            404
-          )
-        );
-      }
-    
+    if (!user) {
+      return next(
+        new AppError(
+          `Theres no User with tha email ${req.params.email} Address `,
+          404
+        )
+      );
+    }
 
     // Generate random reset token
-     const resetToken = await user.generatePasswordResetToken();
-     await user.save({ validateBeforeSave: false }); //save again user while updateing reset data
+    const resetToken = await user.generatePasswordResetToken();
+    await user.save({ validateBeforeSave: false }); //save again user while updateing reset data
 
-    // Send it to Users email
-     sendEmail(user.email)
+    try {
+      // Send it to Users email
+      const resetPasswordUrl = `${req.protocol}://${req.get(
+        'host'
+      )}/api/v1/users/resetPassword/${resetToken}`;
+      console.log(`reset Url ${resetPasswordUrl}`);
+      console.log(`reset Url ${user.email}`);
 
-    //response
-    return res.status(200).json({
-      message: `link sent to ${user.email}`,
-      resetToken ,
-    });
+      await sendEmail({
+        email:user.email,
+        subject: 'Your Reset Password Token (Valid for 10 minutes)',
+        body: `
+      <div>
+      Forgot your password? Submit PATCH request with your new password and passwordConfirm to: <b>
+      <a href="${resetPasswordUrl}">resetPassword</a>
 
+      <p>
+      <strong>
+      If you didn't forget your password. please ignore this email! 
+      </strong>
+      </p>
+      </div>
+      `,
+      });
+
+      //response
+      return res.status(200).json({
+        message: `link sent to ${user.email} and expires in 10 minutes`,
+      });
+    } catch (error) {
+      //reset links and timer
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpire = undefined;
+
+      
+      
+      await user.save({ validateBeforeSave: false });
+
+      console.log('Mail Error ' + error.message);
+      return next(
+        new AppError(
+          'Something Went Wrong . while sending email. \n Please try again'
+        )
+      );
+    }
   } catch (error) {
     console.error(`ERROR ${error.message}`);
-    return next(
-      new AppError(
-        `ERROR: ${error.message}! , please login again`,
-       500
-      )
-    );
+    return next(new AppError(`${error.message}`, error.statusCode));
   }
 };
 
 exports.forgotReset = async (req, res, next) => {};
 
-sendEmail = (email) => {
-
-}
