@@ -19,7 +19,7 @@ exports.restrictTo = (...roles) => {
         new AppError(`You Dont have permission to perform this action`, 403)
       );
     }
-    next()
+    next();
   };
 };
 
@@ -30,7 +30,7 @@ exports.signup = async (req, res, next) => {
       email: req.body.email,
       password: req.body.password,
       passwordConfirm: req.body.passwordConfirm,
-      role:req.body.role
+      role: req.body.role,
     });
 
     const token = signToken(newUser._id);
@@ -126,3 +126,48 @@ exports.protect = async (req, res, next) => {
     );
   }
 };
+
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    // Get User based on posted email
+    const user = await User.findOne({ email: req.body.email });
+
+      if (!user) {
+        return next(
+          new AppError(
+            `Theres no User with tha email ${req.params.email} Address `,
+            404
+          )
+        );
+      }
+    
+
+    // Generate random reset token
+     const resetToken = await user.generatePasswordResetToken();
+     await user.save({ validateBeforeSave: false }); //save again user while updateing reset data
+
+    // Send it to Users email
+     sendEmail(user.email)
+
+    //response
+    return res.status(200).json({
+      message: `link sent to ${user.email}`,
+      resetToken ,
+    });
+
+  } catch (error) {
+    console.error(`ERROR ${error.message}`);
+    return next(
+      new AppError(
+        `ERROR: ${error.message}! , please login again`,
+       500
+      )
+    );
+  }
+};
+
+exports.forgotReset = async (req, res, next) => {};
+
+sendEmail = (email) => {
+
+}

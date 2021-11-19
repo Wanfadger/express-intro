@@ -33,7 +33,7 @@ app.use('/api/v1/users', userRouter);
 
 //unmatched routes middleware
 app.all('*', (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl} on the servert`, 404));
+  next(new AppError(`Can't find ${req.originalUrl} on the server`, 404));
 });
 
 //global error handling middleware , fired in catch blocks
