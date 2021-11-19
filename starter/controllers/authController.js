@@ -237,15 +237,39 @@ exports.forgotReset = async (req, res, next) => {
   }
 };
 
-exports.updatePassword = (req, res, next) => {
-  //old password is required
+exports.updatePassword = async (req, res, next) => {
+  try {
+    //old password is required
 
-  // 1) GET USER FROM COLLECTION
+    // 1) GET USER FROM COLLECTION
+    console.log(req.currentUser);
 
-  // 2) CHECK IF PASSWORD IS CORRECT
+    const user = await User.findOne({ email: req.currentUser.email}).select("+password");
+    if (!user) {
+      return next(new AppError(`UnAuthorised User please login`, 403));
+    }
+ 
 
-  // 3) IF , TRUE UPDATE PASSWORD
+    // 2) CHECK IF PASSWORD IS CORRECT
+    if (!(await user.validatePassword(req.body.password, user.password))) {
+      return next(new AppError(`Invalid Password`, 403));
+    }
+      
+    // 3) IF , TRUE UPDATE PASSWORD
+    user.password = req.body.newPassword;
+    user.passwordConfirm = req.body.newPassword;
+    await user.save();
 
-  // 4) LOGIN USER , SEND TOKEN
+    // 4) LOGIN USER , SEND TOKEN
+    // if everything is okay , send authorization token
+    const token = signToken(user._id);
 
+    return res.status(200).json({
+      status: 'success',
+      token,
+    });
+  } catch (error) {
+    console.error(`ERROR ${error.message}`);
+    return next(new AppError(`${error.message}`, error.statusCode));
+  }
 };
