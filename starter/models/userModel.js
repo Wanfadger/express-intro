@@ -59,6 +59,8 @@ const userSchema = new Schema({
   },
 });
 
+
+
 userSchema.pre('save', async function (next) {
   //only runs if password is modified , cases of updating
   if (!this.isModified('password')) return next();
@@ -70,6 +72,10 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+
+
+
 
 //validate password on login
 userSchema.methods.validatePassword = async function (
@@ -93,6 +99,7 @@ userSchema.methods.generatePasswordResetToken = async function () {
   
   return resetToken;
 };
+
 
 const user = mongoose.model('user', userSchema);
 

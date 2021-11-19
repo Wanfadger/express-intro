@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const User = require(`${__dirname}/../models/userModel`);
 const AppError = require(`${__dirname}/../utils/globalError`);
 const sendEmail = require(`${__dirname}/../utils/email`);
+const crypto = require('crypto');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -155,7 +156,7 @@ exports.forgotPassword = async (req, res, next) => {
       console.log(`reset Url ${user.email}`);
 
       await sendEmail({
-        email:user.email,
+        email: user.email,
         subject: 'Your Reset Password Token (Valid for 10 minutes)',
         body: `
       <div>
@@ -180,8 +181,6 @@ exports.forgotPassword = async (req, res, next) => {
       user.passwordResetToken = undefined;
       user.passwordResetTokenExpire = undefined;
 
-      
-      
       await user.save({ validateBeforeSave: false });
 
       console.log('Mail Error ' + error.message);
@@ -197,5 +196,56 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-exports.forgotReset = async (req, res, next) => {};
+exports.forgotReset = async (req, res, next) => {
+  try {
+    // 1) Get user based on the token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
 
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetTokenExpire: { $gt: Date.now() },
+    });
+
+    // 2) if token has not expired, there is user , set new password
+    if (!user) {
+      return next(
+        new AppError(`Token is invalid or has Expired, Try Again `, 400)
+      );
+    }
+
+    // 3) update user
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpire = undefined;
+
+    await user.save();
+
+    // 3) Log the user in , send jwt
+    const token = signToken(user._id);
+    return res.status(200).json({
+      status: 'success',
+      mesage: 'Password successfully resetted',
+      token,
+    });
+  } catch (error) {
+    console.error(`ERROR ${error.message}`);
+    return next(new AppError(`${error.message}`, error.statusCode));
+  }
+};
+
+exports.updatePassword = (req, res, next) => {
+  //old password is required
+
+  // 1) GET USER FROM COLLECTION
+
+  // 2) CHECK IF PASSWORD IS CORRECT
+
+  // 3) IF , TRUE UPDATE PASSWORD
+
+  // 4) LOGIN USER , SEND TOKEN
+
+};
