@@ -57,9 +57,12 @@ const userSchema = new Schema({
     enum: ['admin', 'guide', 'lead-guide', 'user'],
     default: 'user',
   },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
-
-
 
 userSchema.pre('save', async function (next) {
   //only runs if password is modified , cases of updating
@@ -73,9 +76,11 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-
-
-
+//query middleware and it points to current query
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
 
 //validate password on login
 userSchema.methods.validatePassword = async function (
@@ -92,14 +97,13 @@ userSchema.methods.generatePasswordResetToken = async function () {
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  
-  this.passwordResetTokenExpire = Date.now() + (10 * 60 * 1000)  //[10 minutes to seconds and then milliseconds]
 
- // console.log({ resetToken }  , this.passwordResetToken  , this.passwordResetTokenExpire )
-  
+  this.passwordResetTokenExpire = Date.now() + 10 * 60 * 1000; //[10 minutes to seconds and then milliseconds]
+
+  // console.log({ resetToken }  , this.passwordResetToken  , this.passwordResetTokenExpire )
+
   return resetToken;
 };
-
 
 const user = mongoose.model('user', userSchema);
 

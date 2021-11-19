@@ -1,5 +1,6 @@
 const User = require(`${__dirname}/../models/userModel`);
 const AppError = require(`${__dirname}/../utils/globalError`);
+const ApiFeature = require('./../utils/apiFeature');
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -13,7 +14,7 @@ exports.getAllUsers = async (req, res) => {
 
     res.status(200).json({
       status: true,
-      message: 'success',
+      message: 'success Users',
       count: users.length,
       data: { users },
     });
@@ -101,4 +102,28 @@ const filteredFieldsObject = (req, ...allowedFields) => {
     }
   })
   return filteredObj
+}
+
+
+exports.deleteMe = async (req , res , next) => {
+  try {
+    // GET LOGGED USER
+    // SET ACTIVE TO FALSE
+    const user = await User.findByIdAndUpdate(req.currentUser.id, {
+      active: false,
+    });
+    if (!user) {
+      return next(new AppError(`Please Login Again`, 404));
+    }
+
+    // RETURN RESPONSE
+
+    return res.status(204).json({
+      message: 'successfully deleted',
+      status: true,
+    });
+  } catch (error) {
+      console.error(`ERROR ${error.message}`);
+      return next(new AppError(`${error.message}`, error.statusCode));
+    }
 }

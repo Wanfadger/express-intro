@@ -19,7 +19,7 @@ class ApiFeature {
       (match) => `$${match}`
     );
 
-    this.query = Tour.find(JSON.parse(queryString));
+    this.query = this.query.find(JSON.parse(queryString));
     return this;
   }
 
