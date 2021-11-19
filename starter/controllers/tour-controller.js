@@ -124,10 +124,11 @@ exports.getAllTours = async (req, res) => {
     });
   } catch (error) {
     console.log('ERROR ' + error.message);
-    return res.status('404').json({
-      message: error.message,
-      status: false,
-    });
+     return next(new AppError('Unknown Error', 500));
+    // return res.status('404').json({
+    //   message: error.message,
+    //   status: false,
+    // });
   }
 };
 

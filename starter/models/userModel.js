@@ -46,7 +46,7 @@ const userSchema = new Schema({
   },
 });
 
-userSchema.pre('save', async (next) => {
+userSchema.pre('save', async function(next){
   //only runs if password is modified , cases of updating
   if (!this.isModified('password')) return next()
 
@@ -58,6 +58,12 @@ userSchema.pre('save', async (next) => {
 
 })
 
+//validate password on login
+userSchema.method('validate', async function(password, hashedPassword) {
+  return await bcrypt.compare(password, hashedPassword);
+}, { suppressWarning: true });
+
 const user = mongoose.model('user', userSchema);
+
 
 module.exports = user;

@@ -39,10 +39,10 @@ app.all('*', (req, res, next) => {
 //global error handling middleware , fired in catch blocks
 app.use((error, req, res, next) => {
   error.statusCode = error.statusCode || 500
-    res.status(404).json({
+    res.status(error.statusCode).json({
       message: error.message,
       status: false,
-      statusCode: error.statusCode
+      statusCode: error.statusCode,
     });
 })
 
