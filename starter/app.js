@@ -2,6 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
+const xssClean = require("xss-clean")
+const mongoSanitize = require("express-mongo-sanitize")
+
 const helmet = require('helmet');
 
 const AppError = require(`${__dirname}/utils/globalError`);
@@ -13,8 +16,7 @@ dotenv.config({
   path: `${__dirname}/config.env`,
 });
 
-const tourRouter = require(`./routes/tour-router`);
-const userRouter = require(`./routes/user-router`);
+
 
 const app = express();
 
@@ -43,6 +45,15 @@ app.use('/api', limiter);
 // BODY PARSER , READING DATA FROM BODY INTO REQ.BODY
 app.use(express.json());
 
+// EXPRESS MONGO SANITIZE AGAIST NOSQL INJECTION
+app.use(mongoSanitize())
+
+// XSS CLEAN FROM MALICIOU HTML OR JS CODE
+app.use(xssClean())
+
+const tourRouter = require(`./routes/tour-router`);
+const userRouter = require(`./routes/user-router`);
+
 // TO TOUR ROUTES
 app.use('/api/v1/tours', tourRouter);
 
@@ -51,6 +62,8 @@ app.use('/api/v1/users', userRouter);
 
 // SERVING STATIC FILES
 app.use(express.static(`${__dirname}/public`));
+
+
 
 //unmatched routes middleware
 app.all('*', (req, res, next) => {
